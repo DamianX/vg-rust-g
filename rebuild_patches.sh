@@ -40,4 +40,4 @@ save_patches() {
 if [ "$clean" == "clean" ]; then
     rm -rf *-patches
 fi
-save_patches tg-rust-g paradise-rust-g origin/master
+save_patches tg-rust-g vg-rust-g origin/master

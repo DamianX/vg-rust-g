@@ -1,0 +1,110 @@
+From eca9d7b8574a15148e441ef60f060b718c2b92dc Mon Sep 17 00:00:00 2001
+From: Damian <damian@autistici.org>
+Date: Mon, 22 Jan 2024 20:06:38 +0100
+Subject: [PATCH] Implemented dmi_icon_state_dirs
+
+
+diff --git a/Cargo.lock b/Cargo.lock
+index 98170f3..71740e6 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -2754,7 +2754,7 @@ dependencies = [
+ 
+ [[package]]
+ name = "rust-g"
+-version = "3.1.0"
++version = "3.1.0-vg"
+ dependencies = [
+  "aho-corasick",
+  "base64",
+diff --git a/Cargo.toml b/Cargo.toml
+index 482865b..a020f3a 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -1,7 +1,7 @@
+ [package]
+ name = "rust-g"
+ edition = "2021"
+-version = "3.1.0"
++version = "3.1.0-vg"
+ authors = [
+     "Bjorn Neergaard <bjorn@neersighted.com>",
+     "Tad Hardesty <tad@platymuus.com>",
+@@ -9,7 +9,7 @@ authors = [
+ ]
+ repository = "https://github.com/tgstation/rust-g"
+ license = "MIT"
+-description = "Offloaded task library for the /tg/ Space Station 13 codebase"
++description = "Offloaded task library for the /tg/ Space Station 13 codebase - adapted from ParadiseSS13/rust-g"
+ rust-version = "1.70"
+ 
+ [lib]
+diff --git a/dmsrc/dmi.dm b/dmsrc/dmi.dm
+index 9ebb8ed..64ec3fd 100644
+--- a/dmsrc/dmi.dm
++++ b/dmsrc/dmi.dm
+@@ -7,3 +7,4 @@
+  * output: json_encode'd list. json_decode to get a flat list with icon states in the order they're in inside the .dmi
+  */
+ #define rustg_dmi_icon_states(fname) RUSTG_CALL(RUST_G, "dmi_icon_states")(fname)
++#define rustg_dmi_icon_state_dirs(fname, icon_state_name) RUSTG_CALL(RUST_G, "dmi_icon_state_dirs")(fname, icon_state_name)
+\ No newline at end of file
+diff --git a/src/dmi.rs b/src/dmi.rs
+index e365e02..accaeab 100644
+--- a/src/dmi.rs
++++ b/src/dmi.rs
+@@ -31,6 +31,13 @@ byond_fn!(fn dmi_icon_states(path) {
+     read_states(path).ok()
+ });
+ 
++byond_fn!(fn dmi_icon_state_dirs(icon_path, icon_state) {
++    match get_icon_state_dirs(icon_path, icon_state) {
++        Ok(x) => Some(format!("{x}")),
++        Err(_) => None
++    }
++});
++
+ fn strip_metadata(path: &str) -> Result<()> {
+     let (reader, frame_info, image) = read_png(path)?;
+     write_png(path, &reader, &frame_info, &image, true)
+@@ -119,17 +126,31 @@ fn resize_png<P: AsRef<Path>>(
+     Ok(newimg.save_with_format(path.as_ref(), image::ImageFormat::Png)?)
+ }
+ 
++fn read_icon(path: &str) -> Result<Icon> {
++    let reader = BufReader::new(File::open(path)?);
++    let icon = Icon::load(reader).ok();
++    match icon {
++        Some(icon) => Ok(icon),
++        None => Err(Error::InvalidPngData)
++    }
++}
++
++fn get_icon_state_dirs(path: &str, state_name: &str) -> Result<u8> {
++    let icon = read_icon(path)?;
++    for icon_state in icon.states {
++        if &icon_state.name == state_name {
++            return Ok(icon_state.dirs)
++        }
++    }
++    Ok(0)
++}
++
+ /// Output is a JSON string for reading within BYOND
+ ///
+ /// Erroring at any point will produce an empty string
+ fn read_states(path: &str) -> Result<String> {
+-    let reader = BufReader::new(File::open(path)?);
+-    let icon = Icon::load(reader).ok();
+-    if icon.is_none() {
+-        return Err(Error::InvalidPngData);
+-    }
++    let icon = read_icon(path)?;
+     let states: Vec<_> = icon
+-        .unwrap()
+         .states
+         .iter()
+         .map(|s| s.name.clone())
+-- 
+2.43.0.windows.1
+

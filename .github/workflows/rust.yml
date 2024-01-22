@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: "Apply Paradise Patches"
+      - name: "Apply /vg/ Patches"
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "CI User"
@@ -30,17 +30,17 @@ jobs:
         with:
           toolchain: stable
           command: check
-          args: --manifest-path paradise-rust-g/Cargo.toml --target i686-pc-windows-msvc --all-features
+          args: --manifest-path vg-rust-g/Cargo.toml --target i686-pc-windows-msvc --all-features
       - name: Build (release) (default features)
         uses: actions-rs/cargo@v1
         with:
           toolchain: stable
           command: build
-          args: --manifest-path paradise-rust-g/Cargo.toml --target i686-pc-windows-msvc --release
+          args: --manifest-path vg-rust-g/Cargo.toml --target i686-pc-windows-msvc --release
       - uses: actions/upload-artifact@v1
         with:
           name: rust_g.dll
-          path: paradise-rust-g/target/i686-pc-windows-msvc/release/rust_g.dll
+          path: vg-rust-g/target/i686-pc-windows-msvc/release/rust_g.dll
   build-linux:
     runs-on: ubuntu-latest
     env:
@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
-      - name: "Apply Paradise Patches"
+      - name: "Apply /vg/ Patches"
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "CI User"
@@ -60,7 +60,7 @@ jobs:
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install g++-multilib zlib1g-dev:i386 libssl-dev:i386
-          ./paradise-rust-g/scripts/install_byond.sh
+          ./vg-rust-g/scripts/install_byond.sh
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -70,19 +70,19 @@ jobs:
         with:
           toolchain: stable
           command: check
-          args: --manifest-path paradise-rust-g/Cargo.toml --target i686-unknown-linux-gnu --all-features
+          args: --manifest-path vg-rust-g/Cargo.toml --target i686-unknown-linux-gnu --all-features
       - name: Build (Debug) (all features)
         uses: actions-rs/cargo@v1
         with:
           toolchain: stable
           command: build
-          args: --manifest-path paradise-rust-g/Cargo.toml --target i686-unknown-linux-gnu --all-features
+          args: --manifest-path vg-rust-g/Cargo.toml --target i686-unknown-linux-gnu --all-features
       - name: Run tests (all features)
         uses: actions-rs/cargo@v1
         with:
           toolchain: stable
           command: test
-          args: --manifest-path paradise-rust-g/Cargo.toml --target i686-unknown-linux-gnu --all-features
+          args: --manifest-path vg-rust-g/Cargo.toml --target i686-unknown-linux-gnu --all-features
         env:
           BYOND_BIN: /home/runner/BYOND/byond/bin
       - name: Build (release) (default features)
@@ -90,8 +90,8 @@ jobs:
         with:
           toolchain: stable
           command: build
-          args: --manifest-path paradise-rust-g/Cargo.toml --target i686-unknown-linux-gnu --release
+          args: --manifest-path vg-rust-g/Cargo.toml --target i686-unknown-linux-gnu --release
       - uses: actions/upload-artifact@v1
         with:
           name: rust_g
-          path: paradise-rust-g/target/i686-unknown-linux-gnu/release/librust_g.so
+          path: vg-rust-g/target/i686-unknown-linux-gnu/release/librust_g.so
